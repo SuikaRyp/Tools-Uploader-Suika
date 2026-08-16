@@ -1,0 +1,557 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>APK Builder - SuikaUploader Tools</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <div style="padding: 10px 16px 0">
+        <a
+          href="../../index.html"
+          style="display:inline-flex;align-items:center;gap:6px;color:var(--text-tertiary,#888);font-size:13px;text-decoration:none;font-family:'Poppins',sans-serif"
+          >← Kembali ke SuikaUploader</a
+        >
+      </div>
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-inner">
+          <div class="app-logo"><i class="fa-solid fa-hammer"></i></div>
+          <div class="header-text">
+            <h1>APK Builder</h1>
+            <p data-i18n="header.subtitle">HTML to Android APK Builder</p>
+          </div>
+        </div>
+      </header>
+
+      <!-- Tab Navigation -->
+      <nav class="tab-nav" role="tablist">
+        <button
+          class="tab-btn active"
+          data-tab="editor"
+          role="tab"
+          aria-selected="true"
+        >
+          <i class="fa-solid fa-code"></i
+          ><span class="tab-label" data-i18n="tab.editor">Editor</span>
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="preview"
+          role="tab"
+          aria-selected="false"
+        >
+          <i class="fa-solid fa-eye"></i
+          ><span class="tab-label" data-i18n="tab.preview">Preview</span>
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="build"
+          role="tab"
+          aria-selected="false"
+        >
+          <i class="fa-solid fa-rocket"></i
+          ><span class="tab-label" data-i18n="tab.build">Build</span>
+        </button>
+        <button
+          class="tab-btn"
+          data-tab="settings"
+          role="tab"
+          aria-selected="false"
+        >
+          <i class="fa-solid fa-gear"></i
+          ><span class="tab-label" data-i18n="tab.settings">Settings</span>
+        </button>
+      </nav>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- ===== EDITOR TAB ===== -->
+        <div class="tab-panel active" id="panel-editor" role="tabpanel">
+          <!-- App Config -->
+          <div class="section-card">
+            <div class="section-title">
+              <i class="fa-solid fa-mobile-screen"></i>
+              <span data-i18n="editor.app_config">App Configuration</span>
+            </div>
+            <p class="section-desc" data-i18n="editor.app_config_desc">
+              Define your Android application identity and version.
+            </p>
+            <div class="form-group">
+              <label class="form-label"
+                ><span data-i18n="editor.apk_name">APK Name</span>
+                <span class="required">*</span></label
+              >
+              <input
+                class="form-input"
+                id="apkName"
+                placeholder="My Awesome App"
+                autocomplete="off"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label"
+                ><span data-i18n="editor.package_name">Package Name</span>
+                <span class="required">*</span></label
+              >
+              <input
+                class="form-input mono"
+                id="packageName"
+                placeholder="com.example.myapp"
+                autocomplete="off"
+              />
+              <p class="form-hint" data-i18n="editor.package_hint">
+                Unique identifier using reverse domain notation (e.g.
+                com.yourname.appname)
+              </p>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" data-i18n="editor.version_name"
+                  >Version Name</label
+                >
+                <input
+                  class="form-input"
+                  id="versionName"
+                  placeholder="1.0.0"
+                  value="1.0.0"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="editor.version_code"
+                  >Version Code</label
+                >
+                <input
+                  class="form-input"
+                  id="versionCode"
+                  placeholder="1"
+                  value="1"
+                  type="number"
+                  min="1"
+                  autocomplete="off"
+                />
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" data-i18n="editor.app_icon"
+                >App Icon</label
+              >
+              <div class="icon-upload-zone" id="iconUploadZone">
+                <div class="icon-preview" id="iconPreview">
+                  <i class="fa-solid fa-image"></i>
+                </div>
+                <div class="icon-text">
+                  <div class="title" data-i18n="editor.upload_icon">
+                    Upload Icon
+                  </div>
+                  <div class="hint" data-i18n="editor.icon_hint">
+                    PNG recommended, 512×512px
+                  </div>
+                </div>
+              </div>
+              <input
+                type="file"
+                id="iconFileInput"
+                accept="image/png,image/jpeg,image/webp"
+              />
+            </div>
+          </div>
+
+          <!-- GitHub Config -->
+          <div class="section-card">
+            <div class="section-title">
+              <i class="fa-brands fa-github"></i>
+              <span data-i18n="editor.github_title">GitHub Integration</span>
+            </div>
+            <p class="section-desc" data-i18n="editor.github_desc">
+              Connect your GitHub account to create repos and trigger CI/CD
+              builds.
+            </p>
+            <div class="form-group">
+              <label class="form-label"
+                ><span data-i18n="editor.gh_username">GitHub Username</span>
+                <span class="required">*</span></label
+              >
+              <input
+                class="form-input"
+                id="ghUsername"
+                placeholder="user"
+                autocomplete="off"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label"
+                ><span data-i18n="editor.gh_token">Personal Access Token</span>
+                <span class="required">*</span></label
+              >
+              <div class="input-wrap">
+                <input
+                  class="form-input mono"
+                  id="ghToken"
+                  type="password"
+                  placeholder="ghp_xxxxxxxxxxxx"
+                  autocomplete="off"
+                />
+                <button
+                  class="input-toggle"
+                  id="tokenToggle"
+                  type="button"
+                  aria-label="Toggle token visibility"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+              <p class="form-hint" data-i18n="editor.gh_token_hint">
+                Required scopes: repo, workflow. Token is stored in-memory only.
+              </p>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label"
+                  ><span data-i18n="editor.repo_name">Repository Name</span>
+                  <span class="required">*</span></label
+                >
+                <input
+                  class="form-input mono"
+                  id="repoName"
+                  placeholder="my-android-app"
+                  autocomplete="off"
+                />
+              </div>
+              <div class="form-group">
+                <label class="form-label" data-i18n="editor.visibility"
+                  >Visibility</label
+                >
+                <select class="form-select" id="repoVisibility">
+                  <option value="public">Public</option>
+                  <option value="private">Private</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- HTML Upload -->
+          <div class="section-card">
+            <div class="section-title">
+              <i class="fa-solid fa-file-code"></i>
+              <span data-i18n="editor.html_title">HTML Source File</span>
+            </div>
+            <p class="section-desc" data-i18n="editor.html_desc">
+              Upload your HTML file. Ensure all CSS and JavaScript is inlined
+              using &lt;style&gt; and &lt;script&gt; tags within the single HTML
+              file.
+            </p>
+            <div class="upload-zone" id="htmlUploadZone">
+              <div class="upload-icon">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+              </div>
+              <div class="upload-text" data-i18n="editor.html_drop">
+                Drag & drop your HTML file here
+              </div>
+              <div class="upload-hint" data-i18n="editor.html_browse">
+                or click to browse — accepts .html files only
+              </div>
+              <div
+                class="upload-file-info"
+                id="htmlFileInfo"
+                style="display: none"
+              >
+                <i class="fa-solid fa-file-code"></i>
+                <span class="file-name" id="htmlFileName"></span>
+                <span class="file-size" id="htmlFileSize"></span>
+                <button class="upload-remove" id="htmlRemoveBtn" type="button">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+            </div>
+            <input type="file" id="htmlFileInput" accept=".html,.htm" />
+          </div>
+        </div>
+
+        <!-- ===== PREVIEW TAB ===== -->
+        <div class="tab-panel" id="panel-preview" role="tabpanel">
+          <div class="section-card" style="padding: 0; overflow: hidden">
+            <div class="preview-toolbar">
+              <button
+                class="btn btn-ghost btn-sm"
+                id="previewReload"
+                title="Reload preview"
+              >
+                <i class="fa-solid fa-rotate-right"></i>
+              </button>
+              <div
+                class="preview-url"
+                id="previewUrl"
+                data-i18n="preview.no_file"
+              >
+                No file loaded
+              </div>
+            </div>
+            <div class="preview-frame-wrap" id="previewWrap">
+              <div class="preview-empty" id="previewEmpty">
+                <i class="fa-solid fa-browser"></i>
+                <p data-i18n="preview.empty">
+                  Upload an HTML file to see a live preview
+                </p>
+              </div>
+              <iframe
+                class="preview-frame"
+                id="previewFrame"
+                style="display: none"
+                sandbox="allow-scripts allow-same-origin"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== BUILD TAB ===== -->
+        <div class="tab-panel" id="panel-build" role="tabpanel">
+          <div class="build-hero" id="buildHero">
+            <div class="build-hero-icon">
+              <i class="fa-solid fa-rocket"></i>
+            </div>
+            <h2 data-i18n="build.ready_title">Ready to Build</h2>
+            <p data-i18n="build.ready_desc">
+              Fill in all required fields in the Editor tab, then start the
+              build process to generate your APK.
+            </p>
+            <button
+              class="btn btn-primary btn-full"
+              id="buildStartBtn"
+              style="margin-top: 20px; max-width: 280px"
+            >
+              <span class="btn-text"
+                ><i class="fa-solid fa-play"></i>
+                <span data-i18n="build.start">Start Build</span></span
+              >
+              <span class="spinner"></span>
+            </button>
+          </div>
+
+          <div class="build-stepper" id="buildStepper">
+            <div class="step-item" data-step="0">
+              <div class="step-dot">1</div>
+              <div class="step-info">
+                <div class="step-label" data-i18n="build.step1_label">
+                  Create Repository
+                </div>
+                <div class="step-sublabel" data-i18n="build.step1_sub">
+                  Initialize new GitHub repository
+                </div>
+              </div>
+            </div>
+            <div class="step-item" data-step="1">
+              <div class="step-dot">2</div>
+              <div class="step-info">
+                <div class="step-label" data-i18n="build.step2_label">
+                  Upload Files
+                </div>
+                <div class="step-sublabel" data-i18n="build.step2_sub">
+                  Push source code, configs, and workflow
+                </div>
+              </div>
+            </div>
+            <div class="step-item" data-step="2">
+              <div class="step-dot">3</div>
+              <div class="step-info">
+                <div class="step-label" data-i18n="build.step3_label">
+                  Trigger GitHub Actions
+                </div>
+                <div class="step-sublabel" data-i18n="build.step3_sub">
+                  Start CI/CD pipeline
+                </div>
+              </div>
+            </div>
+            <div class="step-item" data-step="3">
+              <div class="step-dot">4</div>
+              <div class="step-info">
+                <div class="step-label" data-i18n="build.step4_label">
+                  Building APK
+                </div>
+                <div class="step-sublabel" data-i18n="build.step4_sub">
+                  Compile Android package with Cordova
+                </div>
+              </div>
+            </div>
+            <div class="step-item" data-step="4">
+              <div class="step-dot">5</div>
+              <div class="step-info">
+                <div class="step-label" data-i18n="build.step5_label">
+                  Complete
+                </div>
+                <div class="step-sublabel" data-i18n="build.step5_sub">
+                  APK artifact ready for download
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="build-logs" id="buildLogs">
+            <div class="logs-header">
+              <span
+                ><i class="fa-solid fa-terminal"></i>
+                <span data-i18n="build.logs">Build Logs</span></span
+              >
+              <button class="btn btn-ghost btn-sm" id="clearLogsBtn">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+            <div class="logs-body" id="logsBody"></div>
+          </div>
+
+          <div class="download-card" id="downloadCard">
+            <i class="fa-solid fa-circle-check"></i>
+            <h3 data-i18n="build.success_title">Build Successful!</h3>
+            <p data-i18n="build.success_desc">
+              Your APK has been built and is available as a GitHub Actions
+              artifact.
+            </p>
+            <a
+              class="btn btn-primary"
+              id="downloadLink"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i class="fa-solid fa-download"></i>
+              <span data-i18n="build.download">Download APK Artifact</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- ===== SETTINGS TAB ===== -->
+        <div class="tab-panel" id="panel-settings" role="tabpanel">
+          <div class="section-card">
+            <div class="section-title">
+              <i class="fa-solid fa-sliders"></i>
+              <span data-i18n="settings.pref_title">Preferences</span>
+            </div>
+            <p class="section-desc" data-i18n="settings.pref_desc">
+              Customize the app behavior to your liking.
+            </p>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="name" data-i18n="settings.autosave">Auto-save</div>
+                <div class="desc" data-i18n="settings.autosave_desc">
+                  Persist form data automatically across sessions
+                </div>
+              </div>
+              <button
+                class="toggle on"
+                id="toggleAutosave"
+                type="button"
+                role="switch"
+                aria-checked="true"
+              ></button>
+            </div>
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="name" data-i18n="settings.autorefresh">
+                  Auto-refresh Preview
+                </div>
+                <div class="desc" data-i18n="settings.autorefresh_desc">
+                  Update preview automatically when file changes
+                </div>
+              </div>
+              <button
+                class="toggle on"
+                id="toggleAutorefresh"
+                type="button"
+                role="switch"
+                aria-checked="true"
+              ></button>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title">
+              <i class="fa-solid fa-circle-info"></i>
+              <span data-i18n="settings.about_title">About</span>
+            </div>
+            <p class="section-desc" data-i18n="settings.about_desc">
+              APK Builder converts your single-file HTML applications into
+              native Android APKs using Apache Cordova and GitHub Actions CI/CD
+              pipeline. No local setup needed.
+            </p>
+            <div style="font-size: 12px; color: var(--text-tertiary)">
+              <p>
+                <strong data-i18n="settings.how_it_works">How it works:</strong>
+              </p>
+              <ol style="padding-left: 18px; margin-top: 6px; line-height: 2">
+                <li data-i18n="settings.step1">
+                  Upload your self-contained HTML file
+                </li>
+                <li data-i18n="settings.step2">
+                  Configure APK metadata and GitHub credentials
+                </li>
+                <li data-i18n="settings.step3">
+                  APK Builder creates a Cordova project on GitHub
+                </li>
+                <li data-i18n="settings.step4">
+                  GitHub Actions builds the debug APK
+                </li>
+                <li data-i18n="settings.step5">
+                  Download the artifact from the workflow run
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="section-card danger-section">
+            <div class="section-title">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span data-i18n="settings.danger_title">Danger Zone</span>
+            </div>
+            <p class="section-desc" data-i18n="settings.danger_desc">
+              Irreversible actions. Proceed with caution.
+            </p>
+            <div class="danger-actions">
+              <button class="btn btn-outline btn-sm" id="btnClearData">
+                <i class="fa-solid fa-eraser"></i> Clear Saved Data
+              </button>
+              <button class="btn btn-danger btn-sm" id="btnResetForm">
+                <i class="fa-solid fa-rotate-left"></i> Reset Form
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Footer -->
+      <footer>
+        <p>APK Builder — bagian dari SuikaUploader Tools</p>
+      </footer>
+    </div>
+
+    <!-- Snackbar Container -->
+    <div class="snackbar-container" id="snackbarContainer"></div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+      <div class="modal-box">
+        <h3 id="modalTitle">Confirm Action</h3>
+        <p id="modalMessage">Are you sure you want to proceed?</p>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="modalCancel">Cancel</button>
+          <button class="btn btn-danger" id="modalConfirm">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/storage.js"></script>
+    <script src="js/github.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/build.js"></script>
+  </body>
+</html>
