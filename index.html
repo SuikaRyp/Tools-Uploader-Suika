@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SuikaUploader — Media Hub Pribadi | Upload, TikTok & IG Downloader</title>
+<meta name="description" content="Upload gambar, video, audio langsung ke GitHub repo kamu. Download video TikTok & Instagram tanpa watermark, cari & download YouTube ke MP4/MP3 — semua dalam satu media hub gratis.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://suika-uploader.vercel.app/">
+
+<!-- Favicon (juga jadi avatar project di dashboard Vercel) -->
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="favicon.svg">
+
+<!-- Open Graph / social preview -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="SuikaUploader — Media Hub Pribadi">
+<meta property="og:description" content="Upload file ke GitHub repo, download TikTok & Instagram tanpa watermark, cari & download YouTube — semua satu tempat.">
+<meta property="og:url" content="https://suika-uploader.vercel.app/">
+<meta property="og:image" content="https://suika-uploader.vercel.app/favicon.svg">
+<meta name="twitter:card" content="summary">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SuikaUploader",
+  "url": "https://suika-uploader.vercel.app/",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Any",
+  "description": "Media hub pribadi: upload file ke GitHub, download TikTok & Instagram tanpa watermark, cari & download YouTube ke MP4/MP3."
+}
+</script>
+
+<!-- CSP: batasin script/style/img/media/koneksi cuma dari sumber yang dipakai app ini.
+     'unsafe-inline' dibutuhin karena UI ini pakai inline onclick= handler.
+     Kalau nambah API/domain baru buat downloader, tambahin juga di connect-src. -->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src https://fonts.gstatic.com;
+  img-src 'self' data: blob: https:;
+  media-src 'self' data: blob: https:;
+  connect-src 'self' https:;
+  object-src 'none';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'self';
+">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="bg-layer"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+<div id="toast-container"></div>
+
+<!-- Bottom Tab Bar (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bn-item active" id="bn-beranda" onclick="navigate('dashboard')">
+    <span class="bn-icon">🏠</span>
+    <span class="bn-label">Beranda</span>
+  </button>
+  <button class="bn-item" id="bn-tools" onclick="navigate('tools')">
+    <span class="bn-icon">🛠️</span>
+    <span class="bn-label">Tools</span>
+  </button>
+  <button class="bn-item" id="bn-log" onclick="navigate('gallery')">
+    <span class="bn-icon">🖼️</span>
+    <span class="bn-label">Log</span>
+  </button>
+  <button class="bn-item" id="bn-info" onclick="navigate('settings')">
+    <span class="bn-icon">ℹ️</span>
+    <span class="bn-label">Info</span>
+  </button>
+</nav>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">🍉</div>
+      Suika<span>Upload</span>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Menu</div>
+      <div class="nav-item active" onclick="navigate('dashboard')">
+        <span class="icon">🏠</span> Beranda
+      </div>
+      <div class="nav-item" onclick="navigate('tools')">
+        <span class="icon">🛠️</span> Tools
+      </div>
+      <div class="nav-item" onclick="navigate('gallery')">
+        <span class="icon">🖼️</span> Log
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Tools</div>
+      <div class="nav-item" onclick="navigate('upload')">
+        <span class="icon">☁️</span> Upload
+      </div>
+      <div class="nav-item" onclick="navigate('tiktok')">
+        <span class="icon">🎵</span> TikTok DL
+      </div>
+      <div class="nav-item" onclick="navigate('instagram')">
+        <span class="icon">📸</span> IG DL
+      </div>
+      <div class="nav-item" onclick="navigate('ytsearch')">
+        <span class="icon">▶️</span> YT Search
+      </div>
+      <div class="nav-item" onclick="navigate('deploy')">
+        <span class="icon">▲</span> Deploy
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:8px">
+      <div class="nav-label">Config</div>
+      <div class="nav-item" onclick="navigate('settings')">
+        <span class="icon">ℹ️</span> Info
+      </div>
+    </div>
+
+    <div class="sidebar-footer">
+      Powered by GitHub API<br>
+      <span id="sidebar-dot" style="color:var(--muted)">●</span>
+      <span id="sidebar-status">Not connected</span>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- DASHBOARD / BERANDA -->
+    <div id="page-dashboard" class="page active">
+      <section class="hero">
+        <div class="hero-floaters" aria-hidden="true">
+          <span class="hf hf-1">☁️</span>
+          <span class="hf hf-2">🎵</span>
+          <span class="hf hf-3">📸</span>
+          <span class="hf hf-4">🖼️</span>
+          <span class="hf hf-5">🚀</span>
+        </div>
+        <div class="hero-badge fade-up d-1">🍉 Media Hub Pribadi</div>
+        <h1 class="hero-title fade-up d-2">Upload, Simpan,<br><span class="grad-text">Bagikan Sekejap.</span></h1>
+        <p class="hero-sub fade-up d-3">Push file langsung ke GitHub repo kamu, download video TikTok &amp; Instagram tanpa watermark — semua dalam satu tempat.</p>
+        <div class="hero-cta fade-up d-4">
+          <button class="btn btn-primary" onclick="navigate('tools')">🚀 Mulai Sekarang</button>
+          <button class="btn btn-ghost" onclick="navigate('gallery')">🖼️ Lihat Gallery</button>
+        </div>
+      </section>
+
+      <div class="section-title fade-up d-4" style="margin:32px 0 16px">✨ Fitur Unggulan</div>
+      <div class="feature-grid">
+        <div class="feature-card fade-up d-1" onclick="navigate('upload')">
+          <div class="feature-icon">☁️</div>
+          <div class="feature-title">Direct Upload</div>
+          <div class="feature-desc">Push gambar, video, & audio langsung ke repo GitHub kamu tanpa server tambahan.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-2" onclick="navigate('tiktok')">
+          <div class="feature-icon">🎵</div>
+          <div class="feature-title">TikTok Downloader</div>
+          <div class="feature-desc">Download video TikTok kualitas HD tanpa watermark, plus audio & slideshow.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-3" onclick="navigate('instagram')">
+          <div class="feature-icon">📸</div>
+          <div class="feature-title">IG Downloader</div>
+          <div class="feature-desc">Simpan reel, post, carousel, dan story Instagram publik dengan sekali klik.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-4" onclick="navigate('gallery')">
+          <div class="feature-icon">🖼️</div>
+          <div class="feature-title">Smart Gallery</div>
+          <div class="feature-desc">Semua file kamu tersimpan rapi & bisa dibuka kapan saja lewat tab Log.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-1" onclick="navigate('ytsearch')">
+          <div class="feature-icon">▶️</div>
+          <div class="feature-title">YouTube Downloader</div>
+          <div class="feature-desc">Cari video YouTube & download langsung ke MP4 atau MP3.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-2" onclick="navigate('deploy')">
+          <div class="feature-icon">▲</div>
+          <div class="feature-title">Deploy Website</div>
+          <div class="feature-desc">Upload file index.html dan langsung online lewat Vercel dalam hitungan detik.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-2" onclick="window.open('tools/apk-builder/index.html', '_blank')">
+          <div class="feature-icon">🛠️</div>
+          <div class="feature-title">APK Builder</div>
+          <div class="feature-desc">Ubah HTML/gambar hasil edit jadi APK Android via GitHub Actions.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+        <div class="feature-card fade-up d-3" onclick="window.open('tools/getcode/index.html', '_blank')">
+          <div class="feature-icon">🕸️</div>
+          <div class="feature-title">GetCode</div>
+          <div class="feature-desc">Ambil semua source code (HTML, CSS, JS, gambar, font) sebuah website jadi satu ZIP.</div>
+          <div class="feature-go">Coba sekarang →</div>
+        </div>
+      </div>
+
+      <div class="glass-card why-us fade-up d-4" style="margin-top:24px">
+        <div class="section-title" style="margin-bottom:14px">💜 Kenapa SuikaUploader?</div>
+        <ul class="why-list">
+          <li class="why-item"><span class="wi-check">✓</span> Gratis & open — cukup pakai repo GitHub kamu sendiri</li>
+          <li class="why-item"><span class="wi-check">✓</span> Semua tools (uploader, downloader) jadi satu app</li>
+          <li class="why-item"><span class="wi-check">✓</span> Tampilan modern, ringan, dan mobile-friendly</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- UPLOAD -->
+    <div id="page-upload" class="page">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button onclick="navigate('tools')" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif" onmouseover="this.style.background='var(--surface-hover)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--muted)'">← Tools</button>
+          <div>
+            <div class="page-title">Upload <span>Files</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Push media langsung ke GitHub repo 🚀</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+          <div class="pulse">☁️</div>
+          <h3>Drop files here or click to browse</h3>
+          <p>File akan langsung di-push ke GitHub repo kamu</p>
+          <div class="types">
+            <span class="type-badge">🖼️ PNG / JPG / GIF / WEBP</span>
+            <span class="type-badge">🎬 MP4 / WEBM / MKV</span>
+            <span class="type-badge">🎵 MP3 / WAV / OGG / FLAC</span>
+          </div>
+        </div>
+        <input type="file" id="file-input" multiple accept="image/*,video/*,audio/*" onchange="handleFiles(this.files)">
+      </div>
+
+      <div class="glass-card" id="queue-card" style="display:none">
+        <div class="row mb-4">
+          <div class="flex-1">
+            <div class="section-title">📦 Upload Queue</div>
+            <div class="section-sub" id="queue-sub">0 files ready</div>
+          </div>
+          <button class="btn btn-primary" id="upload-btn" onclick="startUpload()">🚀 Upload All</button>
+          <button class="btn btn-danger" onclick="clearQueue()">🗑 Clear</button>
+        </div>
+        <div class="queue-list" id="queue-list"></div>
+      </div>
+    </div>
+
+    <!-- TOOLS HUB -->
+    <div id="page-tools" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Tools <span>Hub</span></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">Semua tools ada di sini</div>
+        </div>
+      </div>
+      <div class="tools-hub-grid">
+        <div class="tools-hub-card" onclick="navigate('upload')">
+          <div class="tools-hub-icon">☁️</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">Uploader</div>
+            <div class="tools-hub-sub">Upload gambar & file lainnya ke GitHub</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+        <div class="tools-hub-card" onclick="navigate('tiktok')">
+          <div class="tools-hub-icon">🎵</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">TikTok Downloader</div>
+            <div class="tools-hub-sub">Download video & foto TikTok tanpa watermark</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+        <div class="tools-hub-card" onclick="navigate('instagram')">
+          <div class="tools-hub-icon">📸</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">IG Downloader</div>
+            <div class="tools-hub-sub">Download video & foto Instagram</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+        <div class="tools-hub-card" onclick="navigate('ytsearch')">
+          <div class="tools-hub-icon">▶️</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">YouTube Search</div>
+            <div class="tools-hub-sub">Cari video YouTube & download langsung MP4/MP3</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+        <div class="tools-hub-card" onclick="navigate('deploy')">
+          <div class="tools-hub-icon">▲</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">Deploy Website</div>
+            <div class="tools-hub-sub">Upload file & langsung online lewat Vercel</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+        <div class="tools-hub-card" onclick="window.open('tools/apk-builder/index.html', '_blank')">
+          <div class="tools-hub-icon">🛠️</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">APK Builder</div>
+            <div class="tools-hub-sub">Ubah HTML/gambar hasil edit jadi APK Android via GitHub Actions</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+        <div class="tools-hub-card" onclick="window.open('tools/getcode/index.html', '_blank')">
+          <div class="tools-hub-icon">🕸️</div>
+          <div class="tools-hub-info">
+            <div class="tools-hub-title">GetCode</div>
+            <div class="tools-hub-sub">Ambil semua source code website (HTML, CSS, JS, gambar) jadi satu ZIP</div>
+          </div>
+          <div class="tools-hub-arrow">›</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GALLERY -->
+    <div id="page-gallery" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Gallery <span>Files</span></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">All uploaded media</div>
+        </div>
+        <button class="btn btn-ghost" onclick="loadGallery()">🔄 Refresh</button>
+      </div>
+      <div id="gallery-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px">
+        <div class="empty-state" style="grid-column:1/-1"><div class="em">🖼️</div>No files yet. Upload something first!</div>
+      </div>
+    </div>
+
+    <!-- SETTINGS / INFO -->
+    <div id="page-settings" class="page">
+      <div class="topbar">
+        <div>
+          <div class="page-title">Info <span>& Aktivitas</span></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px">Statistik, koneksi repo, dan pengaturan aplikasi</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon">📁</div><div class="stat-val" id="stat-total">0</div><div class="stat-label">Files Uploaded</div></div>
+        <div class="stat-card"><div class="stat-icon">🖼️</div><div class="stat-val" id="stat-img">0</div><div class="stat-label">Images</div></div>
+        <div class="stat-card"><div class="stat-icon">🎬</div><div class="stat-val" id="stat-vid">0</div><div class="stat-label">Videos</div></div>
+        <div class="stat-card"><div class="stat-icon">🎵</div><div class="stat-val" id="stat-aud">0</div><div class="stat-label">Audio</div></div>
+        <div class="stat-card"><div class="stat-icon">👀</div><div class="stat-val" id="stat-visitors">—</div><div class="stat-label">Total Pengunjung</div></div>
+      </div>
+
+      <div class="section-grid">
+        <div class="glass-card">
+          <div class="section-title">📈 Upload Activity</div>
+          <div class="section-sub">Files uploaded this week</div>
+          <div class="chart-bars" id="chart-bars"></div>
+        </div>
+        <div class="glass-card">
+          <div class="section-title">🔗 GitHub Repo</div>
+          <div class="section-sub mb-4">Storage destination</div>
+          <div id="repo-info" style="font-size:13px;color:var(--muted)"></div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:28px">
+        <div class="row mb-4">
+          <div class="flex-1">
+            <div class="section-title">🕒 Recent Uploads</div>
+            <div class="section-sub">Files uploaded to your GitHub repo</div>
+          </div>
+        </div>
+        <div class="file-list" id="recent-list">
+          <div class="empty-state"><div class="em">📭</div>No uploads yet. Go upload something!</div>
+        </div>
+      </div>
+
+      <div class="settings-grid">
+        <div class="glass-card">
+          <div class="settings-section">
+            <h4>🎨 Background Image</h4>
+            <div class="bg-preview" id="bg-preview"><span>No background set</span></div>
+            <div class="form-group">
+              <label class="form-label">BACKGROUND IMAGE URL (PNG/JPG)</label>
+              <input class="form-input" id="bg-url-input" placeholder="https://example.com/wallpaper.png" />
+            </div>
+            <div class="row mt-4 gap-3">
+              <button class="btn btn-primary" onclick="applyBg()">✅ Apply</button>
+              <button class="btn btn-ghost" onclick="previewBg()">👁 Preview</button>
+              <button class="btn btn-danger" onclick="clearBg()">✕ Clear</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card">
+          <div class="settings-section">
+            <h4>🌐 Overlay Opacity</h4>
+            <div class="form-group">
+              <label class="form-label">DARK OVERLAY (0.0 - 1.0)</label>
+              <input class="form-input" id="overlay-input" type="number" min="0" max="1" step="0.05" value="0.88" placeholder="0.88" />
+            </div>
+            <button class="btn btn-primary mt-4" onclick="applyOverlay()">✅ Apply Overlay</button>
+          </div>
+
+          <hr style="border:none;border-top:1px solid var(--border);margin:20px 0">
+
+          <div class="settings-section">
+            <h4>🗑 Data</h4>
+            <button class="btn btn-danger" onclick="clearAllData()">⚠️ Reset All Data</button>
+            <div style="font-size:11px;color:var(--muted);margin-top:8px">Hapus semua config dan history upload.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TIKTOK DOWNLOADER -->
+    <div id="page-tiktok" class="page">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button onclick="navigate('tools')" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif" onmouseover="this.style.background='var(--surface-hover)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--muted)'">← Tools</button>
+          <div>
+            <div class="page-title">TikTok <span>Downloader</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Download video & foto TikTok tanpa watermark 🎵</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="section-title" style="margin-bottom:12px">🔗 Paste URL TikTok</div>
+        <div class="tt-input-wrap">
+          <input class="form-input" id="tt-url-input" placeholder="https://www.tiktok.com/@user/video/..." onkeydown="if(event.key==='Enter') ttDownload()" />
+          <button class="btn btn-primary" onclick="ttDownload()" id="tt-btn">
+            <span>🔍 Fetch</span>
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">Supports: video (no watermark HD), slideshow/images · Paste URL lalu tekan Enter atau klik Fetch</div>
+      </div>
+
+      <div id="tt-result"></div>
+    </div>
+
+    <!-- INSTAGRAM DOWNLOADER -->
+    <div id="page-instagram" class="page">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button onclick="navigate('tools')" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif" onmouseover="this.style.background='var(--surface-hover)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--muted)'">← Tools</button>
+          <div>
+            <div class="page-title">IG <span>Downloader</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Download video & foto Instagram 📸</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="section-title" style="margin-bottom:12px">🔗 Paste URL Instagram</div>
+        <div class="tt-input-wrap">
+          <input class="form-input" id="ig-url-input" placeholder="https://www.instagram.com/p/..." onkeydown="if(event.key==='Enter') igDownload()" />
+          <button class="btn btn-primary" onclick="igDownload()" id="ig-btn">
+            <span>🔍 Fetch</span>
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">Supports: post, reel, carousel · Hanya postingan publik · Paste URL lalu tekan Enter atau klik Fetch</div>
+      </div>
+
+      <div id="ig-result"></div>
+    </div>
+
+    <!-- YOUTUBE SEARCH -->
+    <div id="page-ytsearch" class="page">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button onclick="navigate('tools')" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif" onmouseover="this.style.background='var(--surface-hover)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--muted)'">← Tools</button>
+          <div>
+            <div class="page-title">YouTube <span>Search</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Cari video YouTube, lalu download langsung sebagai MP4 atau MP3 ▶️</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="section-title" style="margin-bottom:12px">🔎 Cari Video</div>
+        <div class="tt-input-wrap">
+          <input class="form-input" id="yt-search-input" placeholder="dj komang, lofi hip hop, dll..." onkeydown="if(event.key==='Enter') ytSearch()" />
+          <button class="btn btn-primary" onclick="ytSearch()" id="yt-search-btn">
+            <span>🔍 Cari</span>
+          </button>
+        </div>
+        <div style="font-size:11px;color:var(--muted)">Ketik kata kunci lalu tekan Enter atau klik Cari · Setiap hasil punya tombol download MP4 & MP3</div>
+      </div>
+
+      <div id="yt-search-result"></div>
+    </div>
+
+    <!-- DEPLOY WEBSITE -->
+    <div id="page-deploy" class="page">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:14px">
+          <button onclick="navigate('tools')" style="display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif" onmouseover="this.style.background='var(--surface-hover)';this.style.color='var(--text)'" onmouseout="this.style.background='var(--surface)';this.style.color='var(--muted)'">← Tools</button>
+          <div>
+            <div class="page-title">Deploy <span>Website</span></div>
+            <div style="font-size:13px;color:var(--muted);margin-top:4px">Upload file, langsung online lewat Vercel ▲</div>
+          </div>
+        </div>
+        <div class="dep-conn-badge" id="dep-connection-badge">
+          <span class="dep-conn-dot" style="background:var(--muted)"></span> Not connected
+        </div>
+      </div>
+
+      <div class="dep-stats-grid">
+        <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-val" id="dep-stat-total">0</div><div class="stat-label">Total Deploy</div></div>
+        <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-val" id="dep-stat-ready">0</div><div class="stat-label">Ready</div></div>
+        <div class="stat-card"><div class="stat-icon">🟡</div><div class="stat-val" id="dep-stat-building">0</div><div class="stat-label">Building</div></div>
+        <div class="stat-card"><div class="stat-icon">🔴</div><div class="stat-val" id="dep-stat-error">0</div><div class="stat-label">Error</div></div>
+      </div>
+
+      <div class="glass-card" style="margin-bottom:20px">
+        <div class="section-title" style="margin-bottom:4px">🚀 Deploy File Baru</div>
+        <div class="section-sub" style="margin-bottom:16px">Upload file <b>index.html</b> (atau .js/.css/.json/.py/.txt/.php) untuk langsung dideploy jadi website hidup.</div>
+
+        <div class="upload-zone" id="dep-drop-zone" onclick="document.getElementById('dep-file-input').click()">
+          <div class="pulse">▲</div>
+          <h3>Drop file di sini atau klik untuk browse</h3>
+          <p>File akan langsung dideploy ke Vercel sebagai website production</p>
+          <div class="types">
+            <span class="type-badge">🌐 .html → index.html</span>
+            <span class="type-badge">📜 .js / .css / .json</span>
+            <span class="type-badge">🐍 .py / .php / .txt</span>
+          </div>
+        </div>
+        <input type="file" id="dep-file-input" accept=".html,.js,.py,.json,.css,.txt,.php" onchange="handleDeployFile(this.files)">
+
+        <div class="glass-card" id="dep-file-card" style="display:none;margin-top:16px;padding:16px;background:rgba(255,255,255,0.03)">
+          <div id="dep-file-info"></div>
+        </div>
+
+        <div class="form-group" style="margin-top:18px;margin-bottom:16px">
+          <label class="form-label">NAMA PROJECT (opsional)</label>
+          <input class="form-input" id="dep-project-name" placeholder="my-awesome-site" onkeydown="if(event.key==='Enter') startDeploy()">
+          <div style="font-size:11px;color:var(--muted)">Dipakai buat subdomain: <b>nama-project.vercel.app</b> · huruf kecil, angka, strip saja</div>
+        </div>
+
+        <div class="dep-progress-wrap" id="dep-progress-wrap" style="display:none">
+          <div class="dep-progress-top">
+            <span id="dep-progress-label">Menyiapkan...</span>
+            <span id="dep-progress-pct">0%</span>
+          </div>
+          <div class="dep-progress-track">
+            <div class="dep-progress-bar" id="dep-progress-bar" style="width:0%"></div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="dep-deploy-btn" onclick="startDeploy()" style="width:100%;justify-content:center;margin-top:8px">▲ Deploy Sekarang</button>
+      </div>
+
+      <div class="glass-card">
+        <div class="row mb-4">
+          <div class="flex-1">
+            <div class="section-title">📋 Deployments</div>
+            <div class="section-sub">Semua website yang sudah kamu deploy lewat Vercel</div>
+          </div>
+          <button class="btn btn-ghost" onclick="loadDeployments()">🔄 Refresh</button>
+        </div>
+        <div class="dep-grid" id="dep-list">
+          <div class="empty-state"><div class="em">🚀</div>Belum ada website yang di-deploy.</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/security.js"></script>
+<script src="js/api.js"></script>
+<script src="js/deploy.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>

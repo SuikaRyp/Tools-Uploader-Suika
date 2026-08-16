@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://suika-uploader.vercel.app/sitemap.xml
