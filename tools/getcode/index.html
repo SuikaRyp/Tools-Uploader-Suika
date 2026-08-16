@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GetCode - SuikaUploader Tools</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../../css/style.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="bg-layer"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+  <div id="toast-container"></div>
+
+  <div class="gc-wrap">
+    <div style="padding:14px 0 0">
+      <a href="../../index.html" style="display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;text-decoration:none;font-family:'Inter',sans-serif">← Kembali ke SuikaUploader</a>
+    </div>
+
+    <div class="topbar" style="margin-top:18px">
+      <div>
+        <div class="page-title">Get<span>Code</span></div>
+        <div style="font-size:13px;color:var(--muted);margin-top:4px">Ambil semua source code sebuah website jadi satu ZIP 🕸️</div>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="glass-card" style="margin-bottom:20px">
+      <div class="form-group">
+        <div class="form-label">URL WEBSITE</div>
+        <div class="row" style="gap:10px">
+          <input type="text" id="gc-url" class="form-input flex-1" placeholder="contoh: google.com atau https://example.com" onkeydown="if(event.key==='Enter')startGetCode()">
+          <button class="btn btn-primary" id="gc-start-btn" onclick="startGetCode()">🕸️ Ambil Source</button>
+        </div>
+        <div class="gc-hint">Otomatis ambil HTML, CSS, JS, gambar, font, dan media lain yang terhubung ke halaman ini. Kalau metode utama gagal, dicoba ulang lewat proxy cadangan.</div>
+      </div>
+    </div>
+
+    <!-- PROGRESS -->
+    <div class="glass-card" id="gc-progress-card" style="display:none;margin-bottom:20px">
+      <div class="row mb-4">
+        <div class="flex-1">
+          <div class="section-title">🕸️ Sedang memproses...</div>
+          <div class="section-sub" id="gc-progress-sub">Menyiapkan...</div>
+        </div>
+        <button class="btn btn-danger" id="gc-cancel-btn" onclick="cancelGetCode()">✕ Batalkan</button>
+      </div>
+
+      <div class="gc-steps" id="gc-steps">
+        <div class="gc-step" id="gc-step-connect" data-status="pending">
+          <div class="gc-step-icon"><span class="gc-step-num">1</span></div>
+          <div class="gc-step-body">
+            <div class="gc-step-label">Sedang mengambil source code</div>
+            <div class="gc-step-sub">Menghubungi website...</div>
+          </div>
+        </div>
+        <div class="gc-step" id="gc-step-html" data-status="pending">
+          <div class="gc-step-icon"><span class="gc-step-num">2</span></div>
+          <div class="gc-step-body">
+            <div class="gc-step-label">Mendapatkan HTML</div>
+            <div class="gc-step-sub">Menunggu giliran...</div>
+          </div>
+        </div>
+        <div class="gc-step" id="gc-step-assets" data-status="pending">
+          <div class="gc-step-icon"><span class="gc-step-num">3</span></div>
+          <div class="gc-step-body">
+            <div class="gc-step-label">Mendapatkan CSS, JS &amp; aset lainnya</div>
+            <div class="gc-step-sub">Menunggu giliran...</div>
+          </div>
+        </div>
+        <div class="gc-step" id="gc-step-zip" data-status="pending">
+          <div class="gc-step-icon"><span class="gc-step-num">4</span></div>
+          <div class="gc-step-body">
+            <div class="gc-step-label">Membungkus jadi ZIP</div>
+            <div class="gc-step-sub">Menunggu giliran...</div>
+          </div>
+        </div>
+        <div class="gc-step" id="gc-step-done" data-status="pending">
+          <div class="gc-step-icon"><span class="gc-step-num">5</span></div>
+          <div class="gc-step-body">
+            <div class="gc-step-label">Selesai</div>
+            <div class="gc-step-sub">Menunggu giliran...</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="q-progress-wrap" style="margin:18px 0 16px">
+        <div class="q-progress" id="gc-progress-bar" style="width:0%"></div>
+      </div>
+      <div class="file-list" id="gc-log-list"></div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="glass-card" id="gc-result-card" style="display:none">
+      <div class="section-title" style="margin-bottom:16px">✅ Selesai</div>
+      <div class="stats-grid" style="margin-bottom:20px">
+        <div class="stat-card">
+          <div class="stat-icon">📦</div>
+          <div class="stat-val" id="gc-stat-total">0</div>
+          <div class="stat-label">File berhasil</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-val" id="gc-stat-failed">0</div>
+          <div class="stat-label">File gagal</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">💾</div>
+          <div class="stat-val" id="gc-stat-size">0 KB</div>
+          <div class="stat-label">Ukuran ZIP</div>
+        </div>
+      </div>
+      <div class="row" style="gap:10px">
+        <button class="btn btn-primary flex-1" id="gc-download-btn" onclick="downloadZip()">⬇️ Download ZIP Lagi</button>
+        <button class="btn btn-ghost" onclick="resetGetCode()">🔄 Ambil Lagi</button>
+      </div>
+      <div class="gc-hint" style="text-align:center;margin-top:10px">ZIP otomatis ke-download begitu proses selesai. Klik tombol di atas kalau mau unduh ulang.</div>
+    </div>
+
+    <div class="glass-card gc-empty" id="gc-empty-state">
+      <div class="empty-state">
+        <div class="em">🕸️</div>
+        Masukkan URL website di atas, GetCode bakal ambil semua file-nya buat kamu.
+      </div>
+    </div>
+  </div>
+
+  <!-- SUCCESS OVERLAY -->
+  <div class="gc-success-overlay" id="gc-success-overlay" style="display:none" onclick="if(event.target===this)closeSuccessOverlay()">
+    <div class="gc-success-box">
+      <div class="gc-success-ring"></div>
+      <div class="gc-success-check">✅</div>
+      <div class="gc-confetti">
+        <span>🎉</span><span>✨</span><span>🎊</span><span>✨</span><span>🎉</span><span>💥</span>
+      </div>
+      <div class="gc-success-title">Selesai!</div>
+      <div class="gc-success-sub" id="gc-success-sub">Semua file berhasil diambil</div>
+      <button class="btn btn-primary" onclick="closeSuccessOverlay()">🎉 Mantap!</button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="js/getcode.js"></script>
+</body>
+</html>
+
